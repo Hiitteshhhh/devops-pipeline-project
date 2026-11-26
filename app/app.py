@@ -8,7 +8,7 @@ START_TIME = time.time()
 def index():
     return jsonify({
         'message': 'DevOps Pipeline API',
-        'version': '1.0.0',
+        'version': '2.0.0',
         'framework': 'Flask'
     })
 
