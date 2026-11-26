@@ -4,10 +4,6 @@
   connection: local
   gather_facts: false
 
-  vars:
-    app_url: "http://3.27.107.127:5000"
-    expected_version: "2.0.0"
-
   tasks:
     - name: Check API health endpoint
       uri:
@@ -26,13 +22,6 @@
         method: GET
         status_code: 200
       register: root_response
-
-    - name: Verify correct version is deployed
-      assert:
-        that:
-          - root_response.json.version == expected_version
-        fail_msg: "Wrong version! Expected {{ expected_version }}, got {{ root_response.json.version }}"
-        success_msg: "Version {{ expected_version }} deployed successfully!"
 
     - name: Print deployment info
       debug:

@@ -64,12 +64,20 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 
-      - name: Install Ansible
-        run: pip install ansible
+      - name: Install Ansible and boto3
+        run: pip install ansible boto3 botocore
 
       - name: Wait for ECS service to stabilize
-        run: sleep 30
+        run: sleep 60
+
+      - name: Get ECS task public IP
+        run: |
+          TASK_ARN=$(aws ecs list-tasks --cluster devops-flask-cluster --region ap-southeast-2 --query 'taskArns[0]' --output text)
+          ENI_ID=$(aws ecs describe-tasks --cluster devops-flask-cluster --region ap-southeast-2 --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text)
+          PUBLIC_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $ENI_ID --region ap-southeast-2 --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
+          echo "APP_URL=http://$PUBLIC_IP:5000" >> $GITHUB_ENV
+          echo "Deployed at http://$PUBLIC_IP:5000"
 
       - name: Run Ansible playbook to verify deployment
         run: |
-          ansible-playbook ansible/playbook.yml
+          ansible-playbook ansible/playbook.yml --extra-vars "app_url=${{ env.APP_URL }}"
